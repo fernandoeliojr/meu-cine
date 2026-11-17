@@ -209,7 +209,7 @@ function HeroBanner({ type }: { type: 'movie' | 'tv' }) {
       </div>
       <div className="hero-content">
         <p className="hero-eyebrow"><span className="dot" /> Em alta hoje</p>
-        <h1 className="hero-title">{title}</h1>
+        <h1 className="hero-title text-4xl md:text-5xl">{title}</h1>
         <div className="hero-meta">
           <span>⭐ {featured.vote_average?.toFixed(1) ?? '-'}</span>
           <span className="badge">{year}</span>
