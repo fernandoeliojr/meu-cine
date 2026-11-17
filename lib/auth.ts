@@ -6,12 +6,16 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, { auth: { per
 
 export interface UserProfile { id: string; email: string; name: string; }
 
-export const register = async (email: string, password: string): Promise<UserProfile> => {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+export const register = async (email: string, password: string, name?: string): Promise<UserProfile> => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name: name || email.split('@')[0] } },
+  });
   if (error) throw new Error(error.message);
   const user = data?.user ?? data?.session?.user;
-  if (!user) return { id: 'mock', email, name: email.split('@')[0] };
-  return { id: String(user.id), email: user.email!, name: user.user_metadata?.name ?? user.email!.split('@')[0] };
+  if (!user) throw new Error('Não foi possível criar a conta. Tente novamente.');
+  return { id: String(user.id), email: user.email!, name: user.user_metadata?.name ?? email.split('@')[0] };
 };
 
 export const login = async (email: string, password: string): Promise<UserProfile> => {
@@ -31,23 +35,48 @@ export const getCurrentUser = async (): Promise<UserProfile | null> => {
   return { id: String(user.id), email: user.email!, name: user.user_metadata?.name ?? user.email!.split('@')[0] };
 };
 
+/* ------------------------------------------------------------------
+ * Economia de egress (Vercel <-> Supabase):
+ * - cache em memória de 30s evita leituras repetidas no mesmo cliente
+ * - invalidação imediata após escritas (like/dislike/watchlist)
+ * - selects limitados às colunas realmente usadas pela UI
+ * ------------------------------------------------------------------ */
+const cache = new Map<string, { v: any; t: number }>();
+const TTL = 30_000;
+function memo<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.t < TTL) return Promise.resolve(hit.v as T);
+  return fn().then(v => { cache.set(key, { v, t: Date.now() }); return v; });
+}
+function invalidatePrefix(prefix: string) {
+  for (const k of cache.keys()) if (k.startsWith(prefix)) cache.delete(k);
+}
+
 export const getWatchlist = async (): Promise<any[]> => {
   const user = await getCurrentUser();
   if (!user) return [];
-  const { data: rows } = await supabase.from('watchlist').select('*').eq('user_id', user.id);
-  return rows ?? [];
+  return memo(`wl:${user.id}`, async () => {
+    // só as colunas que a UI usa (overview e demais ficam de fora)
+    const { data: rows } = await supabase
+      .from('watchlist')
+      .select('title_id, type, title, poster_path')
+      .eq('user_id', user.id);
+    return rows ?? [];
+  });
 };
 
 export const addToWatchlist = async (item: any): Promise<void> => {
   const user = await getCurrentUser();
   if (!user) throw new Error('Login required');
   await supabase.from('watchlist').insert([{ ...item, user_id: user.id }]);
+  invalidatePrefix(`wl:${user.id}`);
 };
 
 export const removeFromWatchlist = async (titleId: number): Promise<void> => {
   const user = await getCurrentUser();
   if (!user) throw new Error('Login required');
   await supabase.from('watchlist').delete().eq('user_id', user.id).eq('title_id', titleId);
+  invalidatePrefix(`wl:${user.id}`);
 };
 
 export const toggleLiked = async (titleId: number, type: 'movie' | 'tv'): Promise<boolean> => {
@@ -57,9 +86,11 @@ export const toggleLiked = async (titleId: number, type: 'movie' | 'tv'): Promis
   const relatedRows = existing ? existing.filter((e: any) => e.type === type && Number(e.title_id) === titleId) : [];
   if (relatedRows.length > 0) {
     await supabase.from('genres').delete().eq('user_id', user.id).eq('title_id', titleId).eq('type', type);
+    invalidatePrefix(`likes:${user.id}`);
     return false;
   } else {
     await supabase.from('genres').insert({ user_id: user.id, title_id: titleId, type, genre: 'Liked' });
+    invalidatePrefix(`likes:${user.id}`);
     return true;
   }
 };
@@ -67,8 +98,10 @@ export const toggleLiked = async (titleId: number, type: 'movie' | 'tv'): Promis
 export const getLikedIds = async (): Promise<number[]> => {
   const user = await getCurrentUser();
   if (!user) return [];
-  const { data: rows } = await supabase.from('genres').select('title_id').eq('user_id', user.id).eq('genre', 'Liked');
-  return rows?.map((r: any) => Number(r.title_id)) ?? [];
+  return memo(`likes:${user.id}`, async () => {
+    const { data: rows } = await supabase.from('genres').select('title_id').eq('user_id', user.id).eq('genre', 'Liked');
+    return rows?.map((r: any) => Number(r.title_id)) ?? [];
+  });
 };
 
 export const toggleDisliked = async (titleId: number, type: 'movie' | 'tv'): Promise<boolean> => {
@@ -78,9 +111,11 @@ export const toggleDisliked = async (titleId: number, type: 'movie' | 'tv'): Pro
   const relatedRows = existing ? existing.filter((e: any) => e.type === type && Number(e.title_id) === titleId) : [];
   if (relatedRows.length > 0) {
     await supabase.from('genres').delete().eq('user_id', user.id).eq('title_id', titleId).eq('type', type);
+    invalidatePrefix(`dis:${user.id}`);
     return false;
   } else {
     await supabase.from('genres').insert({ user_id: user.id, title_id: titleId, type, genre: 'Disliked' });
+    invalidatePrefix(`dis:${user.id}`);
     return true;
   }
 };
@@ -88,26 +123,28 @@ export const toggleDisliked = async (titleId: number, type: 'movie' | 'tv'): Pro
 export const getDislikedIds = async (): Promise<number[]> => {
   const user = await getCurrentUser();
   if (!user) return [];
-  const { data: rows } = await supabase.from('genres').select('title_id').eq('user_id', user.id).eq('genre', 'Disliked');
-  return rows?.map((r: any) => Number(r.title_id)) ?? [];
+  return memo(`dis:${user.id}`, async () => {
+    const { data: rows } = await supabase.from('genres').select('title_id').eq('user_id', user.id).eq('genre', 'Disliked');
+    return rows?.map((r: any) => Number(r.title_id)) ?? [];
+  });
 };
 
 export async function fetchTrending(type: 'movie' | 'tv'): Promise<any[]> {
   const key = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
   const token = process.env.NEXT_PUBLIC_TMDB_READ_TOKEN!;
-  const url = `https://api.themoviedb.org/3/trending/${type}/day?api_key=${key}`;
+  const url = `https://api.themoviedb.org/3/trending/${type}/day?api_key=${key}&language=pt-BR`;
   const res = await fetch(url);
   if (!res.ok) return [];
   const data = await res.json();
   return (data.results || []).map((i: any) => ({
     id: i.id,
-    title: i.title || i.original_title,
+    title: i.title || i.name || i.original_title || i.original_name,
     poster_path: i.poster_path,
     backdrop_path: i.backdrop_path,
     overview: i.overview,
     vote_average: i.vote_average,
     vote_count: i.vote_count,
-    release_date: i.release_date,
+    release_date: i.release_date || i.first_air_date,
     original_language: i.original_language,
     type,
   }));
@@ -118,7 +155,7 @@ export async function fetchDetail(type: 'movie' | 'tv', id: number): Promise<any
   const token = process.env.NEXT_PUBLIC_TMDB_READ_TOKEN!;
   const headers: Record<string, string> = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}?append_to_response=credits,watch_providers`, { headers });
+  const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}?append_to_response=credits,watch_providers&language=pt-BR`, { headers });
   if (!res.ok) return null;
   return res.json();
 }
@@ -144,7 +181,7 @@ export async function fetchDiscover(
     sort_by: 'popularity.desc',
   });
   if (genreId) params.set('with_genres', String(genreId));
-  const res = await fetch(`https://api.themoviedb.org/3/discover/${type}?${params}`);
+  const res = await fetch(`https://api.themoviedb.org/3/discover/${type}?${params}&language=pt-BR`);
   if (!res.ok) return { items: [], totalPages: 1, totalResults: 0 };
   const data = await res.json();
   return {

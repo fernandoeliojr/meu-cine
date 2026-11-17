@@ -65,7 +65,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* hero */}
-      <HeroBanner />
+      <HeroBanner type={type} />
 
       {/* seletor filmes/séries */}
       <section className="pt-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -119,7 +119,7 @@ export default function Home() {
               n === '…' ? (
                 <span key="dots" className="px-1 text-gray-500">…</span>
               ) : (
-                <button key={n} onClick={() => { setPage(n); window.scrollTo({ top: 0 }); }}
+                <button key={n} onClick={() => { setPage(Number(n)); window.scrollTo({ top: 0 }); }}
                   className={n === page
                     ? 'w-8 h-8 rounded text-sm font-bold bg-[#e50914] text-white'
                     : 'w-8 h-8 rounded text-sm border border-white/10 hover:bg-white/10'}>
@@ -183,15 +183,15 @@ function Card({ item, loggedIn }: { item: any; loggedIn: boolean }) {
 }
 
 /* ---------- hero ---------- */
-function HeroBanner() {
+function HeroBanner({ type }: { type: 'movie' | 'tv' }) {
   const [featured, setFeatured] = useState<any>(null);
 
   useEffect(() => {
-    fetchTrending('movie').then(list => {
+    fetchTrending(type).then(list => {
       const withBackdrop = list.find((i: any) => i.backdrop_path) || list[0];
       setFeatured(withBackdrop || null);
     }).catch(() => {});
-  }, []);
+  }, [type]);
 
   if (!featured) return null;
 
@@ -213,16 +213,16 @@ function HeroBanner() {
         <div className="hero-meta">
           <span>⭐ {featured.vote_average?.toFixed(1) ?? '-'}</span>
           <span className="badge">{year}</span>
-          <span>Filme</span>
+          <span>{type === 'movie' ? 'Filme' : 'Série'}</span>
         </div>
         <p className="hero-desc">{featured.overview}</p>
         <div className="hero-actions">
           <button className="btn btn-primary"
-            onClick={() => toggleLiked(featured.id, 'movie').then(() => alert('Adicionado à sua lista!'))}>
+            onClick={() => toggleLiked(featured.id, type).then(() => alert('Adicionado à sua lista!'))}>
             ▶ Assistir
           </button>
           <button className="btn btn-ghost"
-            onClick={() => addToWatchlist({ title_id: featured.id, type: 'movie', title, poster_path: featured.poster_path, overview: featured.overview })}>
+            onClick={() => addToWatchlist({ title_id: featured.id, type, title, poster_path: featured.poster_path, overview: featured.overview })}>
             + Minha lista
           </button>
         </div>
