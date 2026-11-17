@@ -46,7 +46,7 @@ export default function Header() {
   return (
     <header className={`fixed top-0 inset-x-0 z-50 transition-colors ${scrolled ? 'bg-[#0a0a0f]/95 backdrop-blur border-b border-white/10' : 'bg-gradient-to-b from-black/70 to-transparent'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-        <Link href="/" className="shrink-0"><img src="/img/logo.jpg" alt="Meu Cine" className="h-12" /></Link>
+        <Link href="/" className="shrink-0"><img src="/img/logo.jpg" alt="Meu Cine" className="h-20" /></Link>
 
         <nav className="hidden md:flex items-center gap-6">
           <Link href="/" className="text-sm font-medium text-white hover:text-[#e50914] transition">Início</Link>
