@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { fetchDetail, toggleLiked, toggleDisliked, addToWatchlist, removeFromWatchlist, getWatchlist } from '../../../lib/auth';
 
@@ -21,7 +22,16 @@ const GENRE_COLORS: Record<string, string> = {
   Western: 'bg-amber-100 text-amber-700',
 };
 
-export default function MovieDetail({ params }: { params: { id: string } }) {
+export default function MovieDetail() {
+  return (
+    <Suspense fallback={<p className="p-6 text-gray-500">Carregando...</p>}>
+      <MovieDetailInner />
+    </Suspense>
+  );
+}
+
+function MovieDetailInner() {
+  const params = useParams<{ id: string }>();
   const [id, setId] = useState(parseInt(params.id));
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
