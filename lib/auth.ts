@@ -122,3 +122,51 @@ export async function fetchDetail(type: 'movie' | 'tv', id: number): Promise<any
   if (!res.ok) return null;
   return res.json();
 }
+
+export interface DiscoverPage {
+  items: any[];
+  totalPages: number;
+  totalResults: number;
+}
+
+export async function fetchDiscover(
+  type: 'movie' | 'tv',
+  year: number,
+  page = 1,
+  genreId?: number,
+): Promise<DiscoverPage> {
+  const key = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
+  const yearParam = type === 'movie' ? 'primary_release_year' : 'first_air_date_year';
+  const params = new URLSearchParams({
+    api_key: key,
+    [yearParam]: String(year),
+    page: String(page),
+    sort_by: 'popularity.desc',
+  });
+  if (genreId) params.set('with_genres', String(genreId));
+  const res = await fetch(`https://api.themoviedb.org/3/discover/${type}?${params}`);
+  if (!res.ok) return { items: [], totalPages: 1, totalResults: 0 };
+  const data = await res.json();
+  return {
+    items: (data.results || []).map((i: any) => ({
+      id: i.id,
+      title: i.title || i.name,
+      poster_path: i.poster_path,
+      backdrop_path: i.backdrop_path,
+      overview: i.overview,
+      vote_average: i.vote_average,
+      release_date: i.release_date || i.first_air_date,
+      type,
+    })),
+    totalPages: data.total_pages ?? 1,
+    totalResults: data.total_results ?? 0,
+  };
+}
+
+export async function fetchGenres(type: 'movie' | 'tv'): Promise<{ id: number; name: string }[]> {
+  const key = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
+  const res = await fetch(`https://api.themoviedb.org/3/genre/${type}/list?api_key=${key}&language=pt-BR`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.genres ?? [];
+}
