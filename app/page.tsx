@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
-  fetchTrending, fetchDiscover, fetchGenres,
+  fetchTrending, fetchDiscover, fetchGenres, fetchTrailer,
   toggleLiked, toggleDisliked, addToWatchlist, removeFromWatchlist,
   getWatchlist, getCurrentUser,
 } from '../lib/auth';
@@ -65,7 +65,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* hero */}
-      <HeroBanner type={type} />
+      <HeroBanner type={type} loggedIn={loggedIn} />
 
       {/* seletor filmes/séries */}
       <section className="pt-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -154,26 +154,27 @@ function Card({ item, loggedIn }: { item: any; loggedIn: boolean }) {
 
   return (
     <div className="card">
-      <Link href={`/${item.type}/${item.id}`} className="block">
+      <Link href={`/${item.type}/${item.id}`} className="block relative z-10">
         {poster ? (
           <img src={poster} alt={title} loading="lazy" />
         ) : (
           <div className="aspect-[2/3] bg-[#1e1e27] flex items-center justify-center text-gray-600 text-xs">Sem capa</div>
         )}
+        {loggedIn && (
+          <div className="absolute inset-0 z-20 flex items-end gap-2 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent opacity-0 transition-opacity duration-200 hover:opacity-100">
+            <button className="icon-btn" title="Gostei" onClick={(e) => { e.preventDefault(); toggleLiked(item.id, item.type); }}>👍</button>
+            <button className="icon-btn" title="Não gostei" onClick={(e) => { e.preventDefault(); toggleDisliked(item.id, item.type); }}>👎</button>
+            <button className="icon-btn" title={inWatch ? 'Remover da watchlist' : 'Adicionar à watchlist'}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (inWatch) { await removeFromWatchlist(item.id); setInWatch(false); }
+                else { await addToWatchlist({ title_id: item.id, type: item.type, title, poster_path: item.poster_path, overview: item.overview }); setInWatch(true); }
+              }}>
+              {inWatch ? '✓' : '+'}
+            </button>
+          </div>
+        )}
       </Link>
-      {loggedIn && (
-        <div className="card-overlay">
-          <button className="icon-btn" title="Gostei" onClick={() => toggleLiked(item.id, item.type)}>👍</button>
-          <button className="icon-btn" title="Não gostei" onClick={() => toggleDisliked(item.id, item.type)}>👎</button>
-          <button className="icon-btn" title={inWatch ? 'Remover da watchlist' : 'Adicionar à watchlist'}
-            onClick={async () => {
-              if (inWatch) { await removeFromWatchlist(item.id); setInWatch(false); }
-              else { await addToWatchlist({ title_id: item.id, type: item.type, title, poster_path: item.poster_path, overview: item.overview }); setInWatch(true); }
-            }}>
-            {inWatch ? '✓' : '+'}
-          </button>
-        </div>
-      )}
       <div className="card-meta">
         <p className="card-title">{title}</p>
         <p className="card-sub">⭐ {item.vote_average?.toFixed(1) ?? '-'} · {year}</p>
@@ -183,8 +184,9 @@ function Card({ item, loggedIn }: { item: any; loggedIn: boolean }) {
 }
 
 /* ---------- hero ---------- */
-function HeroBanner({ type }: { type: 'movie' | 'tv' }) {
+function HeroBanner({ type, loggedIn }: { type: 'movie' | 'tv', loggedIn: boolean }) {
   const [featured, setFeatured] = useState<any>(null);
+  const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTrending(type).then(list => {
@@ -192,6 +194,13 @@ function HeroBanner({ type }: { type: 'movie' | 'tv' }) {
       setFeatured(withBackdrop || null);
     }).catch(() => {});
   }, [type]);
+
+  const playTrailer = async () => {
+    if (!featured) return;
+    const url = await fetchTrailer(type, featured.id);
+    if (url) setTrailerUrl(url);
+    else alert('Trailer não encontrado.');
+  };
 
   if (!featured) return null;
 
@@ -209,7 +218,7 @@ function HeroBanner({ type }: { type: 'movie' | 'tv' }) {
       </div>
       <div className="hero-content">
         <p className="hero-eyebrow"><span className="dot" /> Em alta hoje</p>
-        <h1 className="hero-title text-4xl md:text-5xl">{title}</h1>
+        <h1 className="hero-title">{title}</h1>
         <div className="hero-meta">
           <span>⭐ {featured.vote_average?.toFixed(1) ?? '-'}</span>
           <span className="badge">{year}</span>
@@ -217,16 +226,23 @@ function HeroBanner({ type }: { type: 'movie' | 'tv' }) {
         </div>
         <p className="hero-desc">{featured.overview}</p>
         <div className="hero-actions">
-          <button className="btn btn-primary"
-            onClick={() => toggleLiked(featured.id, type).then(() => alert('Adicionado à sua lista!'))}>
-            ▶ Assistir
+          <button className="btn btn-primary" onClick={playTrailer}>
+            ▶ Trailer
           </button>
-          <button className="btn btn-ghost"
-            onClick={() => addToWatchlist({ title_id: featured.id, type, title, poster_path: featured.poster_path, overview: featured.overview })}>
-            + Minha lista
-          </button>
+          {loggedIn && (
+            <button className="btn btn-ghost"
+              onClick={() => addToWatchlist({ title_id: featured.id, type, title, poster_path: featured.poster_path, overview: featured.overview })}>
+              + Minha lista
+            </button>
+          )}
         </div>
       </div>
+      {trailerUrl && (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/90 p-4" onClick={() => setTrailerUrl(null)}>
+          <button className="absolute top-4 right-4 text-white text-3xl font-bold" onClick={() => setTrailerUrl(null)}>×</button>
+          <iframe className="w-full max-w-4xl aspect-video" src={trailerUrl} allowFullScreen />
+        </div>
+      )}
     </section>
   );
 }
