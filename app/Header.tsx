@@ -49,12 +49,12 @@ export default function Header() {
         <Link href="/" className="shrink-0 pt-2"><img src="/img/logo-fundo.png" alt="Meu Cine" className="h-[115px] w-auto" /></Link>
 
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/" className="text-sm font-medium text-white hover:text-[#ff0000] transition">Início</Link>
+          <Link href="/" className="text-sm font-medium text-white hover:text-[#ff0000] transition-colors duration-200">Início</Link>
           {user && (
             <>
-              <Link href="/liked" className="text-sm font-medium text-gray-300 hover:text-[#ff0000] transition">Gostei</Link>
-              <Link href="/dislike" className="text-sm font-medium text-gray-300 hover:text-[#ff0000] transition">Não Gostei</Link>
-              <Link href="/watchlist" className="text-sm font-medium text-gray-300 hover:text-[#ff0000] transition">Assistir depois</Link>
+              <Link href="/liked" className="text-sm font-medium text-gray-300 hover:text-[#ff0000] transition-colors duration-200">Gostei</Link>
+              <Link href="/dislike" className="text-sm font-medium text-gray-300 hover:text-[#ff0000] transition-colors duration-200">Não Gostei</Link>
+              <Link href="/watchlist" className="text-sm font-medium text-gray-300 hover:text-[#ff0000] transition-colors duration-200">Assistir depois</Link>
             </>
           )}
           {user ? (
