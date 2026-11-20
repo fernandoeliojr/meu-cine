@@ -154,25 +154,11 @@ function Card({ item, loggedIn }: { item: any; loggedIn: boolean }) {
 
   return (
     <div className="card">
-      <Link href={`/${item.type}/${item.id}`} className="block relative z-10">
+      <Link href={`/${item.type}/${item.id}`} className="block">
         {poster ? (
           <img src={poster} alt={title} loading="lazy" />
         ) : (
           <div className="aspect-[2/3] bg-[#1e1e27] flex items-center justify-center text-gray-600 text-xs">Sem capa</div>
-        )}
-        {loggedIn && (
-          <div className="absolute inset-0 z-20 flex items-end gap-2 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent opacity-0 transition-opacity duration-200 hover:opacity-100">
-            <button className="icon-btn" title="Gostei" onClick={(e) => { e.preventDefault(); toggleLiked(item.id, item.type); }}>👍</button>
-            <button className="icon-btn" title="Não gostei" onClick={(e) => { e.preventDefault(); toggleDisliked(item.id, item.type); }}>👎</button>
-            <button className="icon-btn" title={inWatch ? 'Remover da watchlist' : 'Adicionar à watchlist'}
-              onClick={async (e) => {
-                e.preventDefault();
-                if (inWatch) { await removeFromWatchlist(item.id); setInWatch(false); }
-                else { await addToWatchlist({ title_id: item.id, type: item.type, title, poster_path: item.poster_path, overview: item.overview }); setInWatch(true); }
-              }}>
-              {inWatch ? '✓' : '+'}
-            </button>
-          </div>
         )}
       </Link>
       <div className="card-meta">
