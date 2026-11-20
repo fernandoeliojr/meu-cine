@@ -86,24 +86,24 @@ function TvDetailInner() {
 
             <div className="flex flex-wrap gap-3">
               <button onClick={playTrailer}
-                className="px-8 py-3 rounded-full bg-[#e50914] border border-[#e50914] text-white font-extrabold text-sm tracking-wide hover:bg-red-700 transition">
+                className="px-6 py-2 rounded-full bg-[#e50914] border border-[#e50914] text-white font-extrabold text-xs tracking-wide hover:bg-red-700 transition">
                 ▶ TRAILER
               </button>
               {loggedIn && (
                 <>
                   <button onClick={() => toggleLiked(id, 'tv')}
-                    className="px-8 py-3 rounded-full bg-transparent border border-white/30 text-white font-extrabold text-sm tracking-wide hover:bg-white/10 hover:border-white/60 transition">
+                    className="px-6 py-2 rounded-full bg-transparent border border-white/30 text-white font-extrabold text-xs tracking-wide hover:bg-white/10 hover:border-white/60 transition">
                     👍 GOSTEI
                   </button>
                   <button onClick={() => toggleDisliked(id, 'tv')}
-                    className="px-8 py-3 rounded-full bg-transparent border border-white/30 text-white font-extrabold text-sm tracking-wide hover:bg-white/10 hover:border-white/60 transition">
+                    className="px-6 py-2 rounded-full bg-transparent border border-white/30 text-white font-extrabold text-xs tracking-wide hover:bg-white/10 hover:border-white/60 transition">
                     👎 NÃO GOSTEI
                   </button>
                   <button onClick={async () => {
                     if (inWatchlist) { await removeFromWatchlist(id); setInWatchlist(false); }
                     else { await addToWatchlist({ title_id: id, type: 'tv', title, poster_path: data.poster_path, overview: data.overview }); setInWatchlist(true); }
                   }}
-                    className={`px-8 py-3 rounded-full border font-extrabold text-sm tracking-wide transition ${
+                    className={`px-6 py-2 rounded-full border font-extrabold text-xs tracking-wide transition ${
                       inWatchlist
                         ? 'bg-[#e50914] border-[#e50914] text-white hover:bg-red-700'
                         : 'bg-transparent border-white/30 text-white hover:bg-white/10 hover:border-white/60'}`}>
