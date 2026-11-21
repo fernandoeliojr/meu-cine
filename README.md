@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Meu Cine
 
-## Getting Started
+Catálogo de filmes e séries em alta, construído com as tecnologias mais recentes para uma experiência rápida e fluida.
 
-First, run the development server:
+## 🚀 Sobre o Projeto
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+O **Meu Cine** é um catálogo interativo que permite explorar filmes e séries em tendência, buscar títulos específicos, favoritar (Gostei/Não Gostei) e gerenciar uma lista de "Assistir Depois" (Watchlist).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 🛠 Tecnologias Utilizadas
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework:** Next.js 16 (App Router + Turbopack + Cache Components + PPR)
+- **Estilização:** Tailwind CSS (v4)
+- **Autenticação e Banco:** Supabase
+- **API de Dados:** The Movie Database (TMDB)
+- **Linguagem:** TypeScript
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ⚙️ Como rodar localmente
 
-## Learn More
+Para executar este projeto em sua máquina local, siga os passos abaixo:
 
-To learn more about Next.js, take a look at the following resources:
+### Pré-requisitos
+- Node.js (versão 20 ou superior recomendada)
+- Git
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Passos
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/fernandoeliojr/meu-cine.git
+   cd meu-cine
+   ```
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+3. Configure as variáveis de ambiente:
+   - Copie o arquivo `.env.example` para `.env.local`:
+     ```bash
+     cp .env.example .env.local
+     ```
+   - Preencha as chaves (`NEXT_PUBLIC_TMDB_API_KEY`, `SUPABASE_URL`, etc.) com suas credenciais do TMDB e Supabase.
+4. Rode o projeto:
+   ```bash
+   npm run dev
+   ```
+5. Acesse o projeto em: `http://localhost:3000`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+🤖 Gerado com [Claude Code](https://claude.com/claude-code)
+Co-Authored-By: Claude Code <noreply@anthropic.com>

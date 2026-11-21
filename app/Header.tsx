@@ -25,8 +25,8 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-[1000] h-[135px] flex items-center bg-transparent">
-        <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between">
+      <header className="absolute top-0 left-0 right-0 z-[1000] h-[135px] flex items-center !bg-transparent">
+        <div className="max-w-7xl mx-auto px-16 w-full flex items-center justify-between">
           <Link href="/" className="shrink-0">
             <img src="/img/logo-fundo.png" alt="Meu Cine" className="h-[115px] w-auto" />
           </Link>
@@ -48,8 +48,8 @@ export default function Header() {
             )}
             {!user && (
               <div className="flex gap-2">
-                <button onClick={() => open('register')} className="text-sm px-4 py-1.5 rounded border border-white/30 hover:bg-white/10 transition-all duration-200">Registrar</button>
-                <button onClick={() => open('login')} className="text-sm px-4 py-1.5 rounded bg-[#e50914] hover:bg-[#ff0000] transition-all duration-200">Entrar</button>
+                <button onClick={() => open('login')} className="text-sm px-4 py-1.5 rounded border border-white/30 hover:bg-white/10 transition-all duration-200">Entrar</button>
+                <button onClick={() => open('register')} className="text-sm px-4 py-1.5 rounded bg-[#e50914] hover:bg-[#ff0000] transition-all duration-200">Registrar</button>
               </div>
             )}
           </nav>
@@ -62,8 +62,8 @@ export default function Header() {
             <Link href="/" onClick={() => setMenuOpen(false)} className="text-sm">Início</Link>
             {!user ? (
               <>
-                <button onClick={() => { setMenuOpen(false); open('register'); }} className="text-left text-sm">Registrar</button>
                 <button onClick={() => { setMenuOpen(false); open('login'); }} className="text-left text-sm">Entrar</button>
+                <button onClick={() => { setMenuOpen(false); open('register'); }} className="text-left text-sm">Registrar</button>
               </>
             ) : (
               <>
