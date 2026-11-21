@@ -1,18 +1,10 @@
 'use client';
-import { Suspense, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { fetchDetail, fetchTrailer, toggleLiked, toggleDisliked, addToWatchlist, removeFromWatchlist, getWatchlist, getCurrentUser } from '../../../lib/auth';
+import { fetchDetail, fetchTrailer, toggleLiked, toggleDisliked, addToWatchlist, removeFromWatchlist, getWatchlist, getCurrentUser, getLikedIds, getDislikedIds } from '../../../lib/auth';
 
 export default function TvDetail() {
-  return (
-    <Suspense fallback={<p className="p-6 text-gray-400">Carregando...</p>}>
-      <TvDetailInner />
-    </Suspense>
-  );
-}
-
-function TvDetailInner() {
   const params = useParams<{ id: string }>();
   const [id, setId] = useState(parseInt(params.id));
   const [data, setData] = useState<any>(null);
@@ -20,10 +12,24 @@ function TvDetailInner() {
   const [inWatchlist, setInWatchlist] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isDisliked, setIsDisliked] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    getCurrentUser().then(u => setLoggedIn(!!u));
+    getCurrentUser().then(async (u) => {
+      setLoggedIn(!!u);
+      if (u) {
+        const [wl, liked, disliked] = await Promise.all([
+          getWatchlist(),
+          getLikedIds(),
+          getDislikedIds()
+        ]);
+        setInWatchlist(wl.some((w: any) => Number(w.title_id) === id));
+        setIsLiked(liked.includes(id));
+        setIsDisliked(disliked.includes(id));
+      }
+    });
     Promise.all([
       fetchDetail('tv', id),
       getWatchlist().then(list => setInWatchlist(list.some((w: any) => Number(w.title_id) === id))).catch(() => {}),
@@ -54,12 +60,13 @@ function TvDetailInner() {
       )}
 
       <div className="relative p-6 pt-24 max-w-4xl mx-auto">
-        <Link href="/" className="inline-block mb-6 text-sm font-bold text-white/70 hover:text-white transition">← Voltar</Link>
-
         <div className="flex flex-col md:flex-row gap-8">
           {poster && (
-            <div className="w-48 shrink-0 rounded-lg overflow-hidden shadow-2xl border border-white/10">
-              <img src={poster} alt={title} className="w-full h-auto" />
+            <div className="w-48 shrink-0 flex flex-col gap-4">
+              <div className="w-full rounded-lg overflow-hidden shadow-2xl border border-white/10">
+                <img src={poster} alt={title} className="w-full h-auto" />
+              </div>
+              <Link href="/" className="inline-flex items-center justify-center py-2 text-sm font-bold text-white/70 hover:text-white transition border border-white/20 rounded-full hover:bg-white/10">← Voltar</Link>
             </div>
           )}
 
@@ -86,18 +93,18 @@ function TvDetailInner() {
 
             <div className="flex flex-wrap gap-3">
               <button onClick={playTrailer}
-                className="px-6 py-2 rounded-full bg-[#e50914] border border-[#e50914] text-white font-extrabold text-xs tracking-wide hover:bg-red-700 transition">
-                ▶ TRAILER
+                className="px-6 py-2 rounded-full bg-transparent border border-white/30 text-white font-extrabold text-xs tracking-wide hover:bg-white/10 hover:border-white/60 transition">
+                TRAILER
               </button>
               {loggedIn && (
                 <>
                   <button onClick={() => toggleLiked(id, 'tv')}
                     className="px-6 py-2 rounded-full bg-transparent border border-white/30 text-white font-extrabold text-xs tracking-wide hover:bg-white/10 hover:border-white/60 transition">
-                    👍 GOSTEI
+                    GOSTEI
                   </button>
                   <button onClick={() => toggleDisliked(id, 'tv')}
                     className="px-6 py-2 rounded-full bg-transparent border border-white/30 text-white font-extrabold text-xs tracking-wide hover:bg-white/10 hover:border-white/60 transition">
-                    👎 NÃO GOSTEI
+                    NÃO GOSTEI
                   </button>
                   <button onClick={async () => {
                     if (inWatchlist) { await removeFromWatchlist(id); setInWatchlist(false); }
@@ -107,7 +114,7 @@ function TvDetailInner() {
                       inWatchlist
                         ? 'bg-[#e50914] border-[#e50914] text-white hover:bg-red-700'
                         : 'bg-transparent border-white/30 text-white hover:bg-white/10 hover:border-white/60'}`}>
-                    {inWatchlist ? '✓ NA MINHA LISTA' : '+ ASSISTIR DEPOIS'}
+                    {inWatchlist ? 'NA MINHA LISTA' : 'ASSISTIR DEPOIS'}
                   </button>
                 </>
               )}

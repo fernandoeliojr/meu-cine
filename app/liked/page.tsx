@@ -1,35 +1,34 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { getLikedItems, fetchDetail } from '../../lib/auth';
 import Link from 'next/link';
-import { getLikedIds, fetchDetail } from '../../lib/auth';
 
-export default function Liked() {
-  const [ids, setIds] = useState<number[]>([]);
+export default function LikedPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getLikedIds().then(async (ids) => {
-      setIds(ids);
-      const results = await Promise.all(ids.map(id => fetchDetail('movie', id).catch(() => fetchDetail('tv', id))));
-      setItems(results.filter(Boolean));
+    getLikedItems().then(async (list) => {
+      const details = await Promise.all(list.map(async (item) => {
+        const d = await fetchDetail(item.type, item.title_id);
+        return { ...d, type: item.type };
+      }));
+      setItems(details);
       setLoading(false);
     });
   }, []);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-red-600">Filmes e Séries que Gostei</h1>
-      {loading ? (
-        <p className="text-gray-500">Carregando...</p>
-      ) : items.length === 0 ? (
-        <p className="text-gray-500">Você ainda não deu like em nenhum. Volte para a página inicial e clique 👍 em qualquer cartaz.</p>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-          {items.map((item: any) => (
-            <Link key={item.id} href={`/${item.title ? 'movie' : 'tv'}/${item.id}`} className="bg-white rounded shadow p-3 hover:shadow-md transition group">
-              <img src={`https://image.tmdb.org/t/p/w200${item.poster_path}`} alt={item.title || item.name} className="w-full h-auto rounded mb-2" />
-              <h2 className="text-sm font-semibold truncate group-hover:text-red-600">{item.title || item.name}</h2>
+    <div className="pt-32 px-4 max-w-7xl mx-auto min-h-screen">
+      <h1 className="text-2xl font-bold mb-6">Meus Gostei</h1>
+      {loading ? <p>Carregando...</p> : items.length === 0 ? <p className="text-gray-500">Você ainda não gostou de nada. Volte para a página inicial e clique 👍 em qualquer cartaz.</p> : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {items.map(item => (
+            <Link key={`${item.type}-${item.id}`} href={`/${item.type}/${item.id}`} className="card block">
+              <img src={`https://image.tmdb.org/t/p/w300${item.poster_path}`} alt={item.title || item.name} loading="lazy" />
+              <div className="card-meta">
+                <p className="card-title">{item.title || item.name}</p>
+              </div>
             </Link>
           ))}
         </div>

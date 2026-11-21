@@ -215,12 +215,6 @@ function HeroBanner({ type, loggedIn }: { type: 'movie' | 'tv', loggedIn: boolea
           <button className="btn btn-primary" onClick={playTrailer}>
             ▶ Trailer
           </button>
-          {loggedIn && (
-            <button className="btn btn-ghost"
-              onClick={() => addToWatchlist({ title_id: featured.id, type, title, poster_path: featured.poster_path, overview: featured.overview })}>
-              + Minha lista
-            </button>
-          )}
         </div>
       </div>
       {trailerUrl && (

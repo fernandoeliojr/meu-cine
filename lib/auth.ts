@@ -55,14 +55,11 @@ function invalidatePrefix(prefix: string) {
 export const getWatchlist = async (): Promise<any[]> => {
   const user = await getCurrentUser();
   if (!user) return [];
-  return memo(`wl:${user.id}`, async () => {
-    // só as colunas que a UI usa (overview e demais ficam de fora)
-    const { data: rows } = await supabase
-      .from('watchlist')
-      .select('title_id, type, title, poster_path')
-      .eq('user_id', user.id);
-    return rows ?? [];
-  });
+  const { data: rows } = await supabase
+    .from('watchlist')
+    .select('title_id, type, title, poster_path')
+    .eq('user_id', user.id);
+  return rows ?? [];
 };
 
 export const addToWatchlist = async (item: any): Promise<void> => {
@@ -82,14 +79,18 @@ export const removeFromWatchlist = async (titleId: number): Promise<void> => {
 export const toggleLiked = async (titleId: number, type: 'movie' | 'tv'): Promise<boolean> => {
   const user = await getCurrentUser();
   if (!user) throw new Error('Login required');
-  const { data: existing } = await supabase.from('genres').select('title_id, type').eq('user_id', user.id);
+  console.log(`[AUTH] toggleLiked: User ${user.id}, Title ${titleId}, Type ${type}`);
+
+  const { data: existing } = await supabase.from('genres').select('id, title_id, type').eq('user_id', user.id).eq('genre', 'Liked');
   const relatedRows = existing ? existing.filter((e: any) => e.type === type && Number(e.title_id) === titleId) : [];
   if (relatedRows.length > 0) {
-    await supabase.from('genres').delete().eq('user_id', user.id).eq('title_id', titleId).eq('type', type);
+    await supabase.from('genres').delete().eq('id', relatedRows[0].id);
+    console.log(`[AUTH] toggleLiked: Deleted row ${relatedRows[0].id}`);
     invalidatePrefix(`likes:${user.id}`);
     return false;
   } else {
     await supabase.from('genres').insert({ user_id: user.id, title_id: titleId, type, genre: 'Liked' });
+    console.log(`[AUTH] toggleLiked: Inserted`);
     invalidatePrefix(`likes:${user.id}`);
     return true;
   }
@@ -98,19 +99,17 @@ export const toggleLiked = async (titleId: number, type: 'movie' | 'tv'): Promis
 export const getLikedIds = async (): Promise<number[]> => {
   const user = await getCurrentUser();
   if (!user) return [];
-  return memo(`likes:${user.id}`, async () => {
-    const { data: rows } = await supabase.from('genres').select('title_id').eq('user_id', user.id).eq('genre', 'Liked');
-    return rows?.map((r: any) => Number(r.title_id)) ?? [];
-  });
+  const { data: rows } = await supabase.from('genres').select('title_id').eq('user_id', user.id).eq('genre', 'Liked');
+  return rows?.map((r: any) => Number(r.title_id)) ?? [];
 };
 
 export const toggleDisliked = async (titleId: number, type: 'movie' | 'tv'): Promise<boolean> => {
   const user = await getCurrentUser();
   if (!user) throw new Error('Login required');
-  const { data: existing } = await supabase.from('genres').select('title_id, type').eq('user_id', user.id);
+  const { data: existing } = await supabase.from('genres').select('id, title_id, type').eq('user_id', user.id).eq('genre', 'Disliked');
   const relatedRows = existing ? existing.filter((e: any) => e.type === type && Number(e.title_id) === titleId) : [];
   if (relatedRows.length > 0) {
-    await supabase.from('genres').delete().eq('user_id', user.id).eq('title_id', titleId).eq('type', type);
+    await supabase.from('genres').delete().eq('id', relatedRows[0].id);
     invalidatePrefix(`dis:${user.id}`);
     return false;
   } else {
@@ -123,10 +122,8 @@ export const toggleDisliked = async (titleId: number, type: 'movie' | 'tv'): Pro
 export const getDislikedIds = async (): Promise<number[]> => {
   const user = await getCurrentUser();
   if (!user) return [];
-  return memo(`dis:${user.id}`, async () => {
-    const { data: rows } = await supabase.from('genres').select('title_id').eq('user_id', user.id).eq('genre', 'Disliked');
-    return rows?.map((r: any) => Number(r.title_id)) ?? [];
-  });
+  const { data: rows } = await supabase.from('genres').select('title_id').eq('user_id', user.id).eq('genre', 'Disliked');
+  return rows?.map((r: any) => Number(r.title_id)) ?? [];
 };
 
 export async function fetchTrending(type: 'movie' | 'tv'): Promise<any[]> {
@@ -200,6 +197,15 @@ export async function fetchDiscover(
   };
 }
 
+export async function fetchTrailer(type: 'movie' | 'tv', id: number): Promise<string | null> {
+  const key = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
+  const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}/videos?api_key=${key}&language=pt-BR`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const trailer = data.results.find((v: any) => v.type === 'Trailer' && v.site === 'YouTube');
+  return trailer ? `https://www.youtube.com/embed/${trailer.key}` : null;
+}
+
 export async function fetchGenres(type: 'movie' | 'tv'): Promise<{ id: number; name: string }[]> {
   const key = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
   const res = await fetch(`https://api.themoviedb.org/3/genre/${type}/list?api_key=${key}&language=pt-BR`);
@@ -207,3 +213,35 @@ export async function fetchGenres(type: 'movie' | 'tv'): Promise<{ id: number; n
   const data = await res.json();
   return data.genres ?? [];
 }
+
+export const getLikedItems = async (): Promise<any[]> => {
+  const user = await getCurrentUser();
+  if (!user) return [];
+  const { data: rows } = await supabase.from('genres').select('title_id, type').eq('user_id', user.id).eq('genre', 'Liked');
+  return rows ?? [];
+};
+
+export const getDislikedItems = async (): Promise<any[]> => {
+  const user = await getCurrentUser();
+  if (!user) return [];
+  const { data: rows } = await supabase.from('genres').select('title_id, type').eq('user_id', user.id).eq('genre', 'Disliked');
+  return rows ?? [];
+};
+
+export async function fetchSearch(query: string): Promise<any[]> {
+  const key = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
+  const params = new URLSearchParams({
+    api_key: key,
+    query: query,
+    language: 'pt-BR',
+  });
+  const [movies, tv] = await Promise.all([
+    fetch(`https://api.themoviedb.org/3/search/movie?${params}`).then(r => r.json()),
+    fetch(`https://api.themoviedb.org/3/search/tv?${params}`).then(r => r.json())
+  ]);
+  return [
+    ...(movies.results || []).map((i: any) => ({ ...i, type: 'movie', title: i.title || i.name })),
+    ...(tv.results || []).map((i: any) => ({ ...i, type: 'tv', title: i.title || i.name }))
+  ].slice(0, 12);
+}
+
