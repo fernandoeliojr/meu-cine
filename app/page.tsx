@@ -4,7 +4,7 @@ import Link from 'next/link';
 import {
   fetchTrending, fetchDiscover, fetchGenres, fetchTrailer,
   toggleLiked, toggleDisliked, addToWatchlist, removeFromWatchlist,
-  getWatchlist, getCurrentUser,
+  getWatchlist, getCurrentUser, getLikedIds, getDislikedIds,
 } from '../lib/auth';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -22,6 +22,7 @@ function pageNumbers(current: number, total: number): (number | string)[] {
 export default function Home() {
   const [type, setType] = useState<'movie' | 'tv'>('movie');
   const [page, setPage] = useState(1);
+  const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
   const [items, setItems] = useState<any[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
@@ -41,11 +42,11 @@ export default function Home() {
       // TMDB devolve 20 itens/página; buscamos 2 páginas e mostramos exatos 24
       const [a, b] = await Promise.all([
         genreId
-          ? fetchDiscover(type, CURRENT_YEAR, page, genreId)
-          : fetchDiscover(type, CURRENT_YEAR, page),
+          ? fetchDiscover(type, selectedYear, page, genreId)
+          : fetchDiscover(type, selectedYear, page),
         genreId
-          ? fetchDiscover(type, CURRENT_YEAR, page + 1, genreId)
-          : fetchDiscover(type, CURRENT_YEAR, page + 1),
+          ? fetchDiscover(type, selectedYear, page + 1, genreId)
+          : fetchDiscover(type, selectedYear, page + 1),
       ]);
       const all = [...a.items, ...b.items].slice(0, PAGE_SIZE);
       setItems(all);
@@ -56,11 +57,11 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [type, page, genreId]);
+  }, [type, page, genreId, selectedYear]);
 
   useEffect(() => { load(); }, [load]);
 
-  const switchType = (t: 'movie' | 'tv') => { setType(t); setPage(1); setGenreId(undefined); };
+  const switchType = (t: 'movie' | 'tv') => { setType(t); setPage(1); setGenreId(undefined); setSelectedYear(CURRENT_YEAR); };
 
   return (
     <div className="min-h-screen">
@@ -71,7 +72,7 @@ export default function Home() {
       <section className="pt-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h2 className="text-xl font-bold">
-            {type === 'movie' ? 'Filmes' : 'Séries'} · {CURRENT_YEAR}
+            {type === 'movie' ? 'Filmes' : 'Séries'} · {selectedYear}
           </h2>
           <div className="flex gap-2">
             <button onClick={() => switchType('movie')}
@@ -84,15 +85,23 @@ export default function Home() {
         {/* chips de gênero */}
         <div className="flex gap-2 flex-wrap mt-4">
           <button onClick={() => { setGenreId(undefined); setPage(1); }}
-            className={genreId === undefined ? 'chip active' : 'chip'}>Todos</button>
+            className={genreId === undefined ? 'chip active' : 'chip'}>Todos Gêneros</button>
           {genres.map(g => (
             <button key={g.id} onClick={() => { setGenreId(g.id); setPage(1); }}
               className={genreId === g.id ? 'chip active' : 'chip'}>{g.name}</button>
           ))}
         </div>
 
+        {/* chips de ano */}
+        <div className="flex gap-2 flex-wrap mt-4">
+          {Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i).map(year => (
+            <button key={year} onClick={() => { setSelectedYear(year); setPage(1); }}
+              className={selectedYear === year ? 'chip active' : 'chip'}>{year}</button>
+          ))}
+        </div>
+
         <p className="text-xs text-gray-500 mt-3">
-          {totalResults > 0 ? `${totalResults} títulos de ${CURRENT_YEAR}` : ''}
+          {totalResults > 0 ? `${totalResults} títulos de ${selectedYear}` : ''}
         </p>
 
         {/* grid */}
@@ -173,6 +182,8 @@ function Card({ item, loggedIn }: { item: any; loggedIn: boolean }) {
 function HeroBanner({ type, loggedIn }: { type: 'movie' | 'tv', loggedIn: boolean }) {
   const [featured, setFeatured] = useState<any>(null);
   const [trailerUrl, setTrailerUrl] = useState<string | null>(null);
+  const [animatingLike, setAnimatingLike] = useState(false);
+  const [animatingDislike, setAnimatingDislike] = useState(false);
 
   useEffect(() => {
     fetchTrending(type).then(list => {
@@ -180,6 +191,20 @@ function HeroBanner({ type, loggedIn }: { type: 'movie' | 'tv', loggedIn: boolea
       setFeatured(withBackdrop || null);
     }).catch(() => {});
   }, [type]);
+
+  const handleLike = async () => {
+    if (!featured) return;
+    setAnimatingLike(true);
+    setTimeout(() => setAnimatingLike(false), 300);
+    await toggleLiked(featured.id, type);
+  };
+
+  const handleDislike = async () => {
+    if (!featured) return;
+    setAnimatingDislike(true);
+    setTimeout(() => setAnimatingDislike(false), 300);
+    await toggleDisliked(featured.id, type);
+  };
 
   const playTrailer = async () => {
     if (!featured) return;
@@ -215,6 +240,18 @@ function HeroBanner({ type, loggedIn }: { type: 'movie' | 'tv', loggedIn: boolea
           <button className="btn btn-primary" onClick={playTrailer}>
             ▶ Trailer
           </button>
+          {loggedIn && (
+            <>
+              <button onClick={handleLike}
+                className={`btn btn-ghost ${animatingLike ? 'is-on' : ''}`}>
+                ♥ Gostei
+              </button>
+              <button onClick={handleDislike}
+                className={`btn btn-ghost ${animatingDislike ? 'is-on' : ''}`}>
+                ✘ Não Gostei
+              </button>
+            </>
+          )}
         </div>
       </div>
       {trailerUrl && (
