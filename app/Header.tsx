@@ -26,7 +26,7 @@ export default function Header() {
   };
 
   const open = (mode: 'login' | 'register') => { setModal(mode); setForm({ name: '', email: '', password: '' }); setError(''); };
-  const handleLogout = async () => { await logout(); window.location.reload(); };
+  const handleLogout = async () => { await logout(); window.location.href = '/'; };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
