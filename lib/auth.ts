@@ -24,6 +24,7 @@ export const login = async (email: string, password: string): Promise<UserProfil
   const user = data?.user ?? data?.session?.user;
   if (!user) throw new Error('User not found');
   return { id: String(user.id), email: user.email!, name: user.user_metadata?.name ?? user.email!.split('@')[0] };
+};
 
 export const logout = async (): Promise<void> => { await supabase.auth.signOut(); };
 
@@ -32,7 +33,7 @@ export const getCurrentUser = async (): Promise<UserProfile | null> => {
   if (error || !data?.session?.user) return null;
   const user = data.session.user;
   return { id: String(user.id), email: user.email!, name: user.user_metadata?.name ?? user.email!.split('@')[0] };
-
+};
 /* ------------------------------------------------------------------
  * Economia de egress (Vercel <-> Supabase):
  * - cache em memória de 30s evita leituras repetidas no mesmo cliente
