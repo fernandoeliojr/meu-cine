@@ -45,6 +45,3 @@ Para executar este projeto em sua máquina local, siga os passos abaixo:
 5. Acesse o projeto em: `http://localhost:3000`
 
 ---
-
-🤖 Gerado com [Claude Code](https://claude.com/claude-code)
-Co-Authored-By: Claude Code <noreply@anthropic.com>
