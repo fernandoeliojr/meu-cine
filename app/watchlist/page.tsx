@@ -1,7 +1,4 @@
-'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { getWatchlist, removeFromWatchlist, getCurrentUser } from '../../lib/auth';
 import { useRouter } from 'next/navigation';
 
 export default function Watchlist() {
@@ -22,7 +19,7 @@ export default function Watchlist() {
   const handleRemove = async (titleId: number) => {
     await removeFromWatchlist(titleId);
     setItems(prev => prev.filter(i => Number(i.title_id) !== titleId));
-  };
+  }
 
   return (
     <div className="pt-32 px-4 max-w-7xl mx-auto min-h-screen text-white">
@@ -37,10 +34,10 @@ export default function Watchlist() {
             <div key={item.title_id} className="card relative group">
               <Link href={`/${item.type}/${item.title_id}`} className="block">
                 <img src={`https://image.tmdb.org/t/p/w300${item.poster_path}`} alt={item.title} className="w-full h-auto rounded" />
-                <div className="card-meta">
-                    <p className="card-title">{item.title}</p>
-                </div>
               </Link>
+              <div className="card-meta">
+                <p className="card-title">{item.title}</p>
+              </div>
               <button onClick={() => handleRemove(item.title_id)}
                 className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#e50914] text-white text-xs hover:bg-red-700">✕</button>
             </div>

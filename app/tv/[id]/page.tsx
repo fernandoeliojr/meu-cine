@@ -1,12 +1,20 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { fetchDetail, fetchTrailer, toggleLiked, toggleDisliked, addToWatchlist, removeFromWatchlist, getWatchlist, getCurrentUser, getLikedIds, getDislikedIds } from '../../../lib/auth';
 
 export default function TvDetail() {
+  return (
+    <Suspense fallback={<p className="p-6 text-gray-400">Carregando...</p>}>
+      <TvDetailContent />
+    </Suspense>
+  );
+}
+
+function TvDetailContent() {
   const params = useParams<{ id: string }>();
-  const [id, setId] = useState(parseInt(params.id));
+  const [id] = useState(parseInt(params?.id || '0'));
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [inWatchlist, setInWatchlist] = useState(false);
@@ -16,6 +24,7 @@ export default function TvDetail() {
   const [isDisliked, setIsDisliked] = useState(false);
 
   useEffect(() => {
+    if (!id) return;
     setLoading(true);
     getCurrentUser().then(async (u) => {
       setLoggedIn(!!u);
