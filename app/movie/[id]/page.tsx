@@ -135,8 +135,18 @@ function MovieDetailContent() {
                     NÃO GOSTEI
                   </button>
                   <button onClick={async () => {
-                    if (inWatchlist) { await removeFromWatchlist(id); setInWatchlist(false); }
-                    else { await addToWatchlist({ title_id: id, type: 'movie', title, poster_path: data.poster_path, overview: data.overview }); setInWatchlist(true); }
+                    try {
+                      if (inWatchlist) {
+                        await removeFromWatchlist(id);
+                        setInWatchlist(false);
+                      } else {
+                        await addToWatchlist({ title_id: id, type: 'movie', title, poster_path: data.poster_path, overview: data.overview });
+                        setInWatchlist(true);
+                      }
+                    } catch (e) {
+                      console.error(e);
+                      alert('Erro ao atualizar lista de "Assistir depois".');
+                    }
                   }}
                     className={`px-6 py-2 rounded-full border font-extrabold text-xs tracking-wide transition ${
                       inWatchlist
