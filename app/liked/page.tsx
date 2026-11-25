@@ -1,22 +1,30 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getLikedItems, fetchDetail } from '../../lib/auth';
+import { getLikedItems, fetchDetail, getCurrentUser } from '../../lib/auth';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function LikedPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    getLikedItems().then(async (list) => {
-      const details = await Promise.all(list.map(async (item) => {
-        const d = await fetchDetail(item.type, item.title_id);
-        return { ...d, type: item.type };
-      }));
-      setItems(details);
-      setLoading(false);
+    getCurrentUser().then(u => {
+      if (!u) {
+        router.push('/');
+        return;
+      }
+      getLikedItems().then(async (list) => {
+        const details = await Promise.all(list.map(async (item) => {
+          const d = await fetchDetail(item.type, item.title_id);
+          return { ...d, type: item.type };
+        }));
+        setItems(details);
+        setLoading(false);
+      });
     });
-  }, []);
+  }, [router]);
 
   return (
     <div className="pt-32 px-4 max-w-7xl mx-auto min-h-screen">

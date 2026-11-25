@@ -1,15 +1,23 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getWatchlist, removeFromWatchlist } from '../../lib/auth';
+import { getWatchlist, removeFromWatchlist, getCurrentUser } from '../../lib/auth';
+import { useRouter } from 'next/navigation';
 
 export default function Watchlist() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    getWatchlist().then(list => { setItems(list); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
+    getCurrentUser().then(u => {
+      if (!u) {
+        router.push('/');
+        return;
+      }
+      getWatchlist().then(list => { setItems(list); setLoading(false); }).catch(() => setLoading(false));
+    });
+  }, [router]);
 
   const handleRemove = async (titleId: number) => {
     await removeFromWatchlist(titleId);
