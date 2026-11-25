@@ -6,7 +6,7 @@ import { fetchDetail, fetchTrailer, toggleLiked, toggleDisliked, addToWatchlist,
 
 export default function MovieDetail() {
   return (
-    <Suspense fallback={<p className="p-6 text-gray-400">Carregando...</p>}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <MovieDetailContent />
     </Suspense>
   );
@@ -51,7 +51,7 @@ function MovieDetailContent() {
     else alert('Trailer não encontrado.');
   };
 
-  if (loading) return <p className="p-6 text-gray-400">Carregando...</p>;
+  if (loading) return <div className="min-h-screen" />;
   if (!data) return <p className="p-6 text-gray-400">Nenhum resultado encontrado.</p>;
 
   const title = data.title || data.name;
