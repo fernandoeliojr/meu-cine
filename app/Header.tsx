@@ -72,8 +72,8 @@ export default function Header() {
             )}
             {!user && (
               <div className="flex gap-2">
-                <button onClick={() => open('login')} className="text-sm px-4 py-1.5 rounded border border-white/30 hover:bg-white/10 transition-all duration-200">Entrar</button>
-                <button onClick={() => open('register')} className="text-sm px-4 py-1.5 rounded bg-[#e50914] hover:bg-[#ff0000] transition-all duration-200">Registrar</button>
+                <button onClick={() => open('login')} className="text-sm px-4 py-1.5 rounded border border-white/30 hover:bg-white/10 text-white transition-all duration-200">Entrar</button>
+                <button onClick={() => open('register')} className="text-sm px-4 py-1.5 rounded bg-[#e50914] hover:bg-[#ff0000] text-white transition-all duration-200">Registrar</button>
               </div>
             )}
           </nav>
