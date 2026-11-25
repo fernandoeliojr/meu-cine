@@ -1,10 +1,18 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { fetchDetail, fetchTrailer, toggleLiked, toggleDisliked, addToWatchlist, removeFromWatchlist, getWatchlist, getCurrentUser, getLikedIds, getDislikedIds } from '../../../lib/auth';
 
 export default function MovieDetail() {
+  return (
+    <Suspense fallback={<p className="p-6 text-gray-400">Carregando...</p>}>
+      <MovieDetailContent />
+    </Suspense>
+  );
+}
+
+function MovieDetailContent() {
   const params = useParams<{ id: string }>();
   const [id] = useState(parseInt(params?.id || '0'));
   const [data, setData] = useState<any>(null);
@@ -35,15 +43,25 @@ export default function MovieDetail() {
   }, [id]);
 
   const handleLike = async () => {
-    const newState = await toggleLiked(id, 'movie');
-    setIsLiked(newState);
-    if (newState) setIsDisliked(false); // Remove se tinha dislike
+    try {
+      const newState = await toggleLiked(id, 'movie');
+      setIsLiked(newState);
+      if (newState) setIsDisliked(false);
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao processar "Gostei".');
+    }
   };
 
   const handleDislike = async () => {
-    const newState = await toggleDisliked(id, 'movie');
-    setIsDisliked(newState);
-    if (newState) setIsLiked(false); // Remove se tinha like
+    try {
+      const newState = await toggleDisliked(id, 'movie');
+      setIsDisliked(newState);
+      if (newState) setIsLiked(false);
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao processar "Não gostei".');
+    }
   };
 
   const playTrailer = async () => {
@@ -69,7 +87,7 @@ export default function MovieDetail() {
         </>
       )}
 
-      <div className="relative p-6 pt-24 max-w-4xl mx-auto">
+      <div className="relative p-6 pt-32 max-w-4xl mx-auto">
         <div className="flex flex-col md:flex-row gap-8">
           {poster && (
             <div className="w-48 shrink-0 flex flex-col gap-4">
@@ -133,8 +151,8 @@ export default function MovieDetail() {
         </div>
       </div>
       {trailerUrl && (
-        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/90 p-4" onClick={() => setTrailerUrl(null)}>
-          <button className="absolute top-4 right-4 text-white text-3xl font-bold" onClick={() => setTrailerUrl(null)}>×</button>
+        <div className="fixed inset-0 z-[3000] grid place-items-center bg-black/90 p-4" onClick={() => setTrailerUrl(null)}>
+          <button className="absolute top-4 right-4 text-white text-3xl font-bold z-[3001]" onClick={() => setTrailerUrl(null)}>×</button>
           <iframe className="w-full max-w-4xl aspect-video" src={trailerUrl} allowFullScreen />
         </div>
       )}

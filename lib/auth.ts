@@ -79,21 +79,28 @@ export const removeFromWatchlist = async (titleId: number): Promise<void> => {
 export const toggleLiked = async (titleId: number, type: 'movie' | 'tv'): Promise<boolean> => {
   const user = await getCurrentUser();
   if (!user) throw new Error('Login required');
-  console.log(`[AUTH] toggleLiked: User ${user.id}, Title ${titleId}, Type ${type}`);
 
-  const { data: existing } = await supabase.from('genres').select('id, title_id, type').eq('user_id', user.id).eq('genre', 'Liked');
-  const relatedRows = existing ? existing.filter((e: any) => e.type === type && Number(e.title_id) === titleId) : [];
-  if (relatedRows.length > 0) {
-    await supabase.from('genres').delete().eq('id', relatedRows[0].id);
-    console.log(`[AUTH] toggleLiked: Deleted row ${relatedRows[0].id}`);
-    invalidatePrefix(`likes:${user.id}`);
-    return false;
-  } else {
-    await supabase.from('genres').insert({ user_id: user.id, title_id: titleId, type, genre: 'Liked' });
-    console.log(`[AUTH] toggleLiked: Inserted`);
-    invalidatePrefix(`likes:${user.id}`);
-    return true;
-  }
+  // Remove ALL existing records for this user and title_id (regardless of genre or action)
+  await supabase
+    .from('genres')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('title_id', Number(titleId))
+    .eq('type', type);
+
+  // Insert the new Liked record
+  const { error } = await supabase.from('genres').insert([{
+    user_id: user.id,
+    title_id: Number(titleId),
+    type,
+    action: 'Liked',
+    genre: 'Liked'
+  }]);
+
+  if (error) throw error;
+  invalidatePrefix(`likes:${user.id}`);
+  return true;
+};
 };
 
 export const getLikedIds = async (): Promise<number[]> => {
@@ -113,7 +120,13 @@ export const toggleDisliked = async (titleId: number, type: 'movie' | 'tv'): Pro
     invalidatePrefix(`dis:${user.id}`);
     return false;
   } else {
-    await supabase.from('genres').insert({ user_id: user.id, title_id: titleId, type, genre: 'Disliked' });
+    await supabase.from('genres').insert([{
+      user_id: user.id,
+      title_id: Number(titleId),
+      type,
+      action: 'Disliked',
+      genre: 'Disliked'
+    }]);
     invalidatePrefix(`dis:${user.id}`);
     return true;
   }

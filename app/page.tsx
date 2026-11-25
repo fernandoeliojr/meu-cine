@@ -194,16 +194,26 @@ function HeroBanner({ type, loggedIn }: { type: 'movie' | 'tv', loggedIn: boolea
 
   const handleLike = async () => {
     if (!featured) return;
-    setAnimatingLike(true);
-    setTimeout(() => setAnimatingLike(false), 300);
-    await toggleLiked(featured.id, type);
+    try {
+      await toggleLiked(featured.id, type);
+      setAnimatingLike(true);
+      setTimeout(() => setAnimatingLike(false), 300);
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao processar "Gostei".');
+    }
   };
 
   const handleDislike = async () => {
     if (!featured) return;
-    setAnimatingDislike(true);
-    setTimeout(() => setAnimatingDislike(false), 300);
-    await toggleDisliked(featured.id, type);
+    try {
+      await toggleDisliked(featured.id, type);
+      setAnimatingDislike(true);
+      setTimeout(() => setAnimatingDislike(false), 300);
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao processar "Não gostei".');
+    }
   };
 
   const playTrailer = async () => {
@@ -255,8 +265,8 @@ function HeroBanner({ type, loggedIn }: { type: 'movie' | 'tv', loggedIn: boolea
         </div>
       </div>
       {trailerUrl && (
-        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/90 p-4" onClick={() => setTrailerUrl(null)}>
-          <button className="absolute top-4 right-4 text-white text-3xl font-bold" onClick={() => setTrailerUrl(null)}>×</button>
+        <div className="fixed inset-0 z-[3000] grid place-items-center bg-black/90 p-4" onClick={() => setTrailerUrl(null)}>
+          <button className="absolute top-4 right-4 text-white text-3xl font-bold z-[3001]" onClick={() => setTrailerUrl(null)}>×</button>
           <iframe className="w-full max-w-4xl aspect-video" src={trailerUrl} allowFullScreen />
         </div>
       )}

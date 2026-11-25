@@ -20,8 +20,8 @@ export default function LikedPage() {
 
   return (
     <div className="pt-32 px-4 max-w-7xl mx-auto min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Meus Gostei</h1>
-      {loading ? <p>Carregando...</p> : items.length === 0 ? <p className="text-gray-500">Você ainda não gostou de nada. Volte para a página inicial e clique 👍 em qualquer cartaz.</p> : (
+      <h1 className="text-2xl font-bold mb-6">Gostei</h1>
+      {loading ? <p>Carregando...</p> : items.length === 0 ? <p className="text-gray-500">Você ainda não tem Filmes/Séries que Gostou.</p> : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {items.map(item => (
             <Link key={`${item.type}-${item.id}`} href={`/${item.type}/${item.id}`} className="card block">
