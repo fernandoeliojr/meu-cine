@@ -148,34 +148,37 @@ export const getDislikedIds = async (): Promise<number[]> => {
 };
 
 export async function fetchTrending(type: 'movie' | 'tv'): Promise<any[]> {
-  const key = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
-  const token = process.env.NEXT_PUBLIC_TMDB_READ_TOKEN!;
-  const url = `https://api.themoviedb.org/3/trending/${type}/day?api_key=${key}&language=pt-BR`;
-  const res = await fetch(url);
-  if (!res.ok) return [];
-  const data = await res.json();
-  return (data.results || []).map((i: any) => ({
-    id: i.id,
-    title: i.title || i.name || i.original_title || i.original_name,
-    poster_path: i.poster_path,
-    backdrop_path: i.backdrop_path,
-    overview: i.overview,
-    vote_average: i.vote_average,
-    vote_count: i.vote_count,
-    release_date: i.release_date || i.first_air_date,
-    original_language: i.original_language,
-    type,
-  }));
+  return memo(`trend:${type}`, async () => {
+    const key = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
+    const url = `https://api.themoviedb.org/3/trending/${type}/day?api_key=${key}&language=pt-BR`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.results || []).map((i: any) => ({
+      id: i.id,
+      title: i.title || i.name || i.original_title || i.original_name,
+      poster_path: i.poster_path,
+      backdrop_path: i.backdrop_path,
+      overview: i.overview,
+      vote_average: i.vote_average,
+      vote_count: i.vote_count,
+      release_date: i.release_date || i.first_air_date,
+      original_language: i.original_language,
+      type,
+    }));
+  });
 }
 
 export async function fetchDetail(type: 'movie' | 'tv', id: number): Promise<any> {
-  const key = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
-  const token = process.env.NEXT_PUBLIC_TMDB_READ_TOKEN!;
-  const headers: Record<string, string> = {};
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}?append_to_response=credits,watch_providers&language=pt-BR`, { headers });
-  if (!res.ok) return null;
-  return res.json();
+  return memo(`detail:${type}:${id}`, async () => {
+    const key = process.env.NEXT_PUBLIC_TMDB_API_KEY!;
+    const token = process.env.NEXT_PUBLIC_TMDB_READ_TOKEN!;
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}?append_to_response=credits,watch_providers&language=pt-BR`, { headers });
+    if (!res.ok) return null;
+    return res.json();
+  });
 }
 
 export interface DiscoverPage {

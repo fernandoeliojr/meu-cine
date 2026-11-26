@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { getCurrentUser, getWatchlist, removeFromWatchlist } from '../../lib/auth';
 
 export default function Watchlist() {
   const [items, setItems] = useState<any[]>([]);
