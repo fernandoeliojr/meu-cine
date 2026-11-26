@@ -82,7 +82,7 @@ export default function Header() {
         </div>
 
         {menuOpen && (
-          <div className="md:hidden absolute top-[135px] right-4 w-32 bg-white/5 border border-white/20 rounded-xl p-3 flex flex-col gap-1 shadow-2xl z-[100] backdrop-blur-sm">
+          <div className="md:hidden absolute top-[135px] right-4 w-32 bg-[#14141b] border border-white/10 rounded-xl p-3 flex flex-col gap-1 shadow-2xl z-[100]">
             {!user ? (
               <>
                 <button onClick={() => { setMenuOpen(false); open('login'); }} className="text-left text-sm text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">Entrar</button>
