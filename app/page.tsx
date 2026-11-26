@@ -110,7 +110,7 @@ export default function Home() {
         ) : items.length === 0 ? (
           <p className="text-gray-500 py-10">Nenhum título encontrado.</p>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 mt-4 justify-items-center">
             {items.map(item => (
               <Card key={`${item.type}-${item.id}`} item={item} loggedIn={loggedIn} />
             ))}
