@@ -82,18 +82,18 @@ export default function Header() {
         </div>
 
         {menuOpen && (
-          <div className="md:hidden absolute top-[135px] right-4 w-32 bg-[#14141b] border border-white/10 rounded-xl p-3 flex flex-col gap-2 shadow-2xl z-[100]">
-            <Link href="/" onClick={() => setMenuOpen(false)} className="text-sm">Início</Link>
+          <div className="md:hidden absolute top-[135px] right-4 w-32 bg-white/5 border border-white/20 rounded-xl p-3 flex flex-col gap-1 shadow-2xl z-[100] backdrop-blur-sm">
             {!user ? (
               <>
-                <button onClick={() => { setMenuOpen(false); open('login'); }} className="text-left text-sm">Entrar</button>
-                <button onClick={() => { setMenuOpen(false); open('register'); }} className="text-left text-sm">Registrar</button>
+                <button onClick={() => { setMenuOpen(false); open('login'); }} className="text-left text-sm text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">Entrar</button>
+                <button onClick={() => { setMenuOpen(false); open('register'); }} className="text-left text-sm text-white px-3 py-1.5 rounded-lg bg-white/10 transition-colors">Registrar</button>
               </>
             ) : (
               <>
-                <Link href="/liked" onClick={() => setMenuOpen(false)} className="text-sm">Gostei</Link>
-                <Link href="/watchlist" onClick={() => setMenuOpen(false)} className="text-sm">Assistir depois</Link>
-                <button onClick={() => { setMenuOpen(false); handleLogout(); }} className="text-left text-sm text-[#e50914]">Sair</button>
+                <Link href="/liked" onClick={() => setMenuOpen(false)} className="text-sm text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">Gostei</Link>
+                <Link href="/disliked" onClick={() => setMenuOpen(false)} className="text-sm text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">Não gostei</Link>
+                <Link href="/watchlist" onClick={() => setMenuOpen(false)} className="text-sm text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">Assistir depois</Link>
+                <button onClick={() => { setMenuOpen(false); handleLogout(); }} className="text-left text-sm text-[#e50914] px-3 py-1.5 rounded-lg hover:bg-[#e50914]/20 transition-colors">Sair</button>
               </>
             )}
           </div>
