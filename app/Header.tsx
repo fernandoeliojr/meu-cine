@@ -78,7 +78,7 @@ export default function Header() {
             )}
           </nav>
 
-          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-white text-xl bg-white/10 rounded p-1.5">☰</button>
+          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-white text-xl bg-red-500/20 rounded p-1.5">☰</button>
         </div>
 
         {menuOpen && (
